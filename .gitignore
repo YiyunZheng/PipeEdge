@@ -157,5 +157,8 @@ cython_debug/
 *.csv
 *.npz
 *.yml
+
+# Yiyun ignore
 dataset/
 *.pth
+src/pipeedge/models/cnn/data

@@ -5,7 +5,7 @@ from torch.distributed import rpc as trpc
 from transformers import AutoConfig
 from pipeedge.comm import p2p, rpc
 from pipeedge.models import ModuleShard, ModuleShardConfig
-from pipeedge.models.transformers import bert, deit, vit
+from pipeedge.models.transformers import bert, deit, vit, resnet
 import devices
 
 _logger = logging.getLogger(__name__)
@@ -41,6 +41,8 @@ _model_cfg_add('facebook/deit-small-distilled-patch16-224', 48, 'DeiT_S_distille
                deit.DeiTShardForImageClassification)
 _model_cfg_add('facebook/deit-tiny-distilled-patch16-224', 48, 'DeiT_T_distilled.npz',
                deit.DeiTShardForImageClassification)
+_model_cfg_add('torchvision/resnet18', 21, 'resnet18.pt',
+               resnet.ResNetModelShard)
 
 def get_model_names() -> List[str]:
     """Get a list of available model names."""
@@ -57,8 +59,9 @@ def get_model_layers(model_name: str) -> int:
 def get_model_config(model_name: str) -> Any:
     """Get a model's config."""
     # We'll need more complexity if/when we add support for models not from `transformers`
+
     config = AutoConfig.from_pretrained(model_name)
-    # Config overrides
+    # Sonfig overrides
     if model_name == 'google/vit-huge-patch14-224-in21k':
         # ViT-Huge doesn't include classification, so we have to set this ourselves
         # NOTE: not setting 'id2label' or 'label2id'
