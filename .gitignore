@@ -158,4 +158,4 @@ cython_debug/
 *.npz
 *.yml
 dataset/
-
+*.pth
