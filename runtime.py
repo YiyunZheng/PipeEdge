@@ -35,14 +35,17 @@ logger = logging.getLogger(__name__)
 
 ## ground truth: Egyptian cat
 # IMG_URL = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-# IMG_LABEL_IDX = 463
+# IMG_LABEL_IDX = 285
 
 # More Ground Truth Samples From https://github.com/EliSchwartz/imagenet-sample-images/tree/master
 # IMG_URL = 'https://raw.githubusercontent.com/EliSchwartz/imagenet-sample-images/master/n01440764_tench.JPEG'
 # IMG_LABEL_IDX = 0
 
-IMG_URL = 'https://raw.githubusercontent.com/EliSchwartz/imagenet-sample-images/master/n01514859_hen.JPEG'
-IMG_LABEL_IDX = 8
+# IMG_URL = 'https://raw.githubusercontent.com/EliSchwartz/imagenet-sample-images/master/n01514859_hen.JPEG'
+# IMG_LABEL_IDX = 8
+
+IMG_URL = 'https://raw.githubusercontent.com/EliSchwartz/imagenet-sample-images/master/n01580077_jay.JPEG'
+IMG_LABEL_IDX = 17
 
 CMD_STOP = 0
 CMD_SCHED = 1
