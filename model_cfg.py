@@ -106,6 +106,7 @@ def module_shard_factory(model_name: str, model_file: Optional[str], layer_start
     shard = module(config, shard_config, model_file)
     _logger.info("======= %s Stage %d =======", module.__name__, stage)
     shard.to(device=devices.DEVICE)
+    shard.eval()
     return shard
 
 def _dist_rpc_pipeline_stage_factory(*args, **kwargs) -> rpc.DistRpcPipelineStage:

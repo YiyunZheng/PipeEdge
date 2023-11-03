@@ -153,6 +153,7 @@ class ResNetModelShard(ModuleShard):
 
         self.avgpool = None
         self.fc = None
+        # pdb.set_trace()
 
         logger.debug(">>>> Model name: %s", self.config.name_or_path)
         if isinstance(model_weights, str):
@@ -257,14 +258,22 @@ class ResNetModelShard(ModuleShard):
         # pdb.set_trace()
         if self.shard_config.is_first:
             data = self.conv1(data)
+            # pdb.set_trace()
             data = self.bn1(data)
+            # pdb.set_trace()
             data = self.relu(data)
+            # pdb.set_trace()
             data = self.maxpool(data)
+            # pdb.set_trace()
             data = [data, data]
+        
         for layer in self.layers:
             data = layer(data)
+            # pdb.set_trace()
         if self.shard_config.is_last:
             data = self.avgpool(data[0])
+            # pdb.set_trace()
             data = torch.flatten(data, 1)
             data = self.fc(data)
+            # pdb.set_trace()
         return data

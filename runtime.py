@@ -34,8 +34,15 @@ import pdb
 logger = logging.getLogger(__name__)
 
 ## ground truth: Egyptian cat
-IMG_URL = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-IMG_LABEL_IDX = 463
+# IMG_URL = 'http://images.cocodataset.org/val2017/000000039769.jpg'
+# IMG_LABEL_IDX = 463
+
+# More Ground Truth Samples From https://github.com/EliSchwartz/imagenet-sample-images/tree/master
+# IMG_URL = 'https://raw.githubusercontent.com/EliSchwartz/imagenet-sample-images/master/n01440764_tench.JPEG'
+# IMG_LABEL_IDX = 0
+
+IMG_URL = 'https://raw.githubusercontent.com/EliSchwartz/imagenet-sample-images/master/n01514859_hen.JPEG'
+IMG_LABEL_IDX = 8
 
 CMD_STOP = 0
 CMD_SCHED = 1
@@ -514,7 +521,7 @@ def run_pipeline_p2p(world_size: int, rank: int, model_name: str, model_file: Op
                 # this call is asynchronous - wait for results to get end-to-end timings
                 start_count = results_counter.value
                 for ubatch, ubatch_labels in data_loader:
-                    # qdb.set_trace()
+                    # pdb.set_trace()
                     label_queue.put(ubatch_labels)
                     stage_ctx.enqueue_tensor(ubatch)
                 results_counter.wait_gte(start_count + len(dataset))
