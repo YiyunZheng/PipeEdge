@@ -6,12 +6,16 @@ import numpy as np
 from torchvision import models
 from .. import ModuleShard, ModuleShardConfig
 
+import pdb
+
 logger = logging.getLogger(__name__)
 
 class ResnetConfig:
     def __init__(self, model=None):
+        self.name_or_path = ''
         self.info = {}
         if model:
+            self.name_or_path = model.__class__.__name__
             self.generate_config(model)
 
     def get_layer_info(self, layer):
@@ -20,10 +24,8 @@ class ResnetConfig:
         if isinstance(layer, models.resnet.BasicBlock):
             for sub_name, sub_child in layer.named_children():
                 if sub_name == "downsample":
-                    print('dd')
                     info["downsample_conv"] = self.get_layer_info(sub_child[0])
                     info["downsample_bn"] = self.get_layer_info(sub_child[1])
-                    print(info)
                 else:
                     info[sub_name] = self.get_layer_info(sub_child)
 
@@ -105,8 +107,9 @@ class ResNetLayerShard(ModuleShard):
     @torch.no_grad()
     def forward(self, data_pack):
         """Compute layer shard."""
-        identity = data_pack[0]
-        data = data_pack[1]
+        # pdb.set_trace()
+        data = data_pack[0]
+        identity = data_pack[1]
         if self.has_layer(0):
             data_conv = self.conv1(data)
             data_bn = self.bn1(data_conv)
@@ -121,7 +124,7 @@ class ResNetLayerShard(ModuleShard):
             data += identity
             data = self.relu(data)
             return data, data
-        return [identity, data]
+        return data, identity
     
     # For unit test only
     def load_weight(self, weight):
@@ -168,10 +171,11 @@ class ResNetModelShard(ModuleShard):
             self.maxpool = MaxPool2d(**self.config['maxpool'])
             self._load_weights_first(weights)
 
-        layer_curr = self.shard_config.layer_start
-        while layer_curr <= (self.shard_config.layer_end -1 if self.shard_config.is_last else self.shard_config.layer_end):
-            print(layer_curr)
-            if self.shard_config.layer_end != 0:
+        layer_curr = self.shard_config.layer_start - 1
+        layer_end = self.shard_config.layer_end - 1
+        while layer_curr <= (layer_end - 1 if self.shard_config.is_last else layer_end):
+
+            if layer_end != 0:
                 layer_id = layer_curr // 5 + 1
                 layer_sub_id = layer_curr  %5 // 3
                 
@@ -180,23 +184,23 @@ class ResNetModelShard(ModuleShard):
                     if layer_id ==1:
                         layer_curr = max(1, layer_curr)
                         sublayer_start = (layer_curr - 1) % 2
-                        if self.shard_config.layer_end > 2:
+                        if layer_end > 2:
                             sublayer_end = 1
                         else:
-                            sublayer_end = self.shard_config.layer_end - 1
+                            sublayer_end = layer_end - 1
                         sub_layer_is_last = True if sublayer_end == 1 else False
 
                     else:
                         sublayer_start = layer_curr % 5 % 3
-                        if layer_id == self.shard_config.layer_end // 5 + 1 and layer_sub_id == self.shard_config.layer_end %5 // 3:
-                            sublayer_end = self.shard_config.layer_end % 5 % 3
+                        if layer_id == layer_end // 5 + 1 and layer_sub_id == layer_end %5 // 3:
+                            sublayer_end = layer_end % 5 % 3
                         else:
                             sublayer_end = 2
                         sub_layer_is_last = True if sublayer_end == 2 else False
                 else:
                     sublayer_start = layer_curr % 5 % 3
-                    if layer_id == self.shard_config.layer_end // 5 + 1 and layer_sub_id == self.shard_config.layer_end %5 // 3:
-                        sublayer_end = self.shard_config.layer_end % 5 % 3
+                    if layer_id == layer_end // 5 + 1 and layer_sub_id == layer_end %5 // 3:
+                        sublayer_end = layer_end % 5 % 3
                     else:
                         sublayer_end = 1
                     sub_layer_is_last = True if sublayer_end == 1 else False
@@ -250,8 +254,9 @@ class ResNetModelShard(ModuleShard):
     @torch.no_grad()
     def forward(self, data):
         """Compute shard layers."""
+        # pdb.set_trace()
         if self.shard_config.is_first:
-            data = self.conv1(data[1])
+            data = self.conv1(data)
             data = self.bn1(data)
             data = self.relu(data)
             data = self.maxpool(data)
@@ -259,8 +264,7 @@ class ResNetModelShard(ModuleShard):
         for layer in self.layers:
             data = layer(data)
         if self.shard_config.is_last:
-            data = self.avgpool(data[1])
+            data = self.avgpool(data[0])
             data = torch.flatten(data, 1)
             data = self.fc(data)
-            data = [data, data]
         return data

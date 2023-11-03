@@ -2,11 +2,14 @@
 import logging
 from typing import Any, Callable, List, Optional, Tuple
 from torch.distributed import rpc as trpc
+from torchvision import models
 from transformers import AutoConfig
 from pipeedge.comm import p2p, rpc
 from pipeedge.models import ModuleShard, ModuleShardConfig
 from pipeedge.models.transformers import bert, deit, vit, resnet
 import devices
+
+import pdb
 
 _logger = logging.getLogger(__name__)
 
@@ -56,21 +59,27 @@ def get_model_layers(model_name: str) -> int:
     """Get a model's layer count."""
     return _MODEL_CONFIGS[model_name]['layers']
 
-def get_model_config(model_name: str) -> Any:
+def get_model_config(model_name: str, model_file) -> Any:
     """Get a model's config."""
     # We'll need more complexity if/when we add support for models not from `transformers`
-
-    config = AutoConfig.from_pretrained(model_name)
-    # Sonfig overrides
-    if model_name == 'google/vit-huge-patch14-224-in21k':
-        # ViT-Huge doesn't include classification, so we have to set this ourselves
-        # NOTE: not setting 'id2label' or 'label2id'
-        config.num_labels = 21843
+    if model_name.split('/')[0] == 'torchvision':
+        config = resnet.ResnetConfig(model_file)
+    else:
+        config = AutoConfig.from_pretrained(model_name)
+        # Sonfig overrides
+        if model_name == 'google/vit-huge-patch14-224-in21k':
+            # ViT-Huge doesn't include classification, so we have to set this ourselves
+            # NOTE: not setting 'id2label' or 'label2id'
+            config.num_labels = 21843
     return config
 
 def get_model_default_weights_file(model_name: str) -> str:
     """Get a model's default weights file name."""
-    return _MODEL_CONFIGS[model_name]['weights_file']
+    if model_name.split('/')[0] == 'torchvision':
+        torch_models = getattr(models, model_name.split('/')[1])
+        return torch_models(pretrained=True)
+    else:
+        return _MODEL_CONFIGS[model_name]['weights_file']
 
 def save_model_weights_file(model_name: str, model_file: Optional[str]=None) -> None:
     """Save a model's weights file."""
@@ -84,9 +93,11 @@ def module_shard_factory(model_name: str, model_file: Optional[str], layer_start
                          layer_end: int, stage: int) -> ModuleShard:
     """Get a shard instance on the globally-configured `devices.DEVICE`."""
     # This works b/c all shard implementations have the same constructor interface
+    # pdb.set_trace()
     if model_file is None:
         model_file = get_model_default_weights_file(model_name)
-    config = get_model_config(model_name)
+    # pdb.set_trace()
+    config = get_model_config(model_name, model_file)
     is_first = layer_start == 1
     is_last = layer_end == get_model_layers(model_name)
     shard_config = ModuleShardConfig(layer_start=layer_start, layer_end=layer_end,
