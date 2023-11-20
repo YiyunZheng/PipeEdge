@@ -7,6 +7,7 @@ from transformers import AutoConfig
 from pipeedge.comm import p2p, rpc
 from pipeedge.models import ModuleShard, ModuleShardConfig
 from pipeedge.models.transformers import bert, deit, vit, resnet
+from pipeedge.models.cnn import vgg19
 import devices
 
 import pdb
@@ -46,6 +47,8 @@ _model_cfg_add('facebook/deit-tiny-distilled-patch16-224', 48, 'DeiT_T_distilled
                deit.DeiTShardForImageClassification)
 _model_cfg_add('torchvision/resnet18', 21, 'resnet18.pt',
                resnet.ResNetModelShard)
+_model_cfg_add('torchvision/vgg19', 16, 'resnet18.pt',
+               resnet.ResNetModelShard)
 
 def get_model_names() -> List[str]:
     """Get a list of available model names."""
@@ -63,7 +66,11 @@ def get_model_config(model_name: str, model_file) -> Any:
     """Get a model's config."""
     # We'll need more complexity if/when we add support for models not from `transformers`
     if model_name.split('/')[0] == 'torchvision':
-        config = resnet.ResnetConfig(model_file)
+        if model_name.split('/')[1] == 'resnet18':
+            config = resnet.ResnetConfig(model_file)
+        elif model_name.split('/')[1] == 'vgg19':
+            config = vgg19.Vgg19Config(model_file)
+        
     else:
         config = AutoConfig.from_pretrained(model_name)
         # Sonfig overrides
