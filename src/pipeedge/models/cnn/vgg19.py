@@ -7,6 +7,8 @@ import torch.nn as nn
 import torch.optim as optim
 import logging
 from tqdm import tqdm
+from .. import ModuleShard, ModuleShardConfig
+
 import pdb
 
 logger = logging.getLogger(__name__)
