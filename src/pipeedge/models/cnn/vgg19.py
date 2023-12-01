@@ -1,16 +1,9 @@
 import torch
-import torchvision.transforms as transforms
-from torchvision import models,datasets
-from torch.utils.data import DataLoader
 import numpy as np
 import torch.nn as nn
-from torch.nn import Conv2d, BatchNorm2d, ReLU, MaxPool2d
-import torch.optim as optim
+from torch.nn import Conv2d, ReLU, MaxPool2d
 import logging
-from tqdm import tqdm
 from .. import ModuleShard, ModuleShardConfig
-
-import pdb
 
 logger = logging.getLogger(__name__)
 
