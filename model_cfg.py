@@ -47,8 +47,8 @@ _model_cfg_add('facebook/deit-tiny-distilled-patch16-224', 48, 'DeiT_T_distilled
                deit.DeiTShardForImageClassification)
 _model_cfg_add('torchvision/resnet18', 21, 'resnet18.pt',
                resnet.ResNetModelShard)
-_model_cfg_add('torchvision/vgg19', 16, 'resnet18.pt',
-               resnet.ResNetModelShard)
+_model_cfg_add('torchvision/vgg19', 16, 'vgg19-dcbb9e9d.pth',
+               vgg19.Vgg19ModelShard)
 
 def get_model_names() -> List[str]:
     """Get a list of available model names."""

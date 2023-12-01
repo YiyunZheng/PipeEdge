@@ -1,9 +1,10 @@
 import torch
-import torchvision
 import torchvision.transforms as transforms
 from torchvision import models,datasets
 from torch.utils.data import DataLoader
+import numpy as np
 import torch.nn as nn
+from torch.nn import Conv2d, BatchNorm2d, ReLU, MaxPool2d
 import torch.optim as optim
 import logging
 from tqdm import tqdm
@@ -15,8 +16,10 @@ logger = logging.getLogger(__name__)
 
 class Vgg19Config:
     def __init__(self, model=None):
+        self.name_or_path = ''
         self.info = {}
         if model:
+            self.name_or_path = model.__class__.__name__
             self.generate_config(model)
 
     def get_layer_info(self, layer):
@@ -65,7 +68,7 @@ class Vgg19Config:
     def __getitem__(self, key):
         return self.info[key]
 
-class VGG19LayerShard(ModuleShard):
+class Vgg19LayerShard(ModuleShard):
     def __init__(self, config, shard_config: ModuleShardConfig):
         super().__init__(config, shard_config)
         self.conv1 = None
@@ -251,14 +254,20 @@ class Vgg19ModelShard(ModuleShard):
         self.dropout2 = None
         self.fc3 = None
 
-        self._build_shard(model_weights)
+        logger.debug(">>>> Model name: %s", self.config.name_or_path)
+        if isinstance(model_weights, str):
+            logger.debug(">>>> Load weight file: %s", model_weights)
+            with np.load(model_weights) as weights:
+                self._build_shard(weights)
+        else:
+            self._build_shard(model_weights)
 
     def _build_shard(self, weights):
 
-        layer_curr = self.shard_config.layer_start
-        while layer_curr <= self.shard_config.layer_end:
+        layer_curr = self.shard_config.layer_start - 1
+        while layer_curr <= self.shard_config.layer_end - 1:
             layer_config = ModuleShardConfig(layer_start=layer_curr, layer_end=layer_curr)
-            layer = VGG19LayerShard(self.config, layer_config)
+            layer = Vgg19LayerShard(self.config, layer_config)
             self._load_weights_layer(weights, layer)
             self.layers.append(layer)
             layer_curr += 1
