@@ -6,7 +6,8 @@ from torchvision import models
 from transformers import AutoConfig
 from pipeedge.comm import p2p, rpc
 from pipeedge.models import ModuleShard, ModuleShardConfig
-from pipeedge.models.transformers import bert, deit, vit, resnet
+from pipeedge.models.cnn import resnet
+from pipeedge.models.transformers import bert, deit, vit
 import devices
 
 import pdb
