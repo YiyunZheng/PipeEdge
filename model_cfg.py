@@ -6,7 +6,7 @@ from torchvision import models
 from transformers import AutoConfig
 from pipeedge.comm import p2p, rpc
 from pipeedge.models import ModuleShard, ModuleShardConfig
-from pipeedge.models.transformers import bert, deit, vit, resnet, alexnet
+from pipeedge.models.transformers import bert, deit, vit, resnet, alexnet, vgg16
 import devices
 
 import pdb
@@ -48,6 +48,8 @@ _model_cfg_add('torchvision/resnet18', 21, 'resnet18.pt',
                resnet.ResNetModelShard)
 _model_cfg_add('torchvision/alexnet', 5, 'alexnet.pt',
                alexnet.AlexNetModelShard)
+_model_cfg_add('torchvision/vgg16', 13, 'vgg16.pt',
+               vgg16.VGGModelShard)
 
 def get_model_names() -> List[str]:
     """Get a list of available model names."""
@@ -69,6 +71,8 @@ def get_model_config(model_name: str, model_file) -> Any:
             config = resnet.ResnetConfig(model_file)
         if model_name.split('/')[1] == 'alexnet':
             config = alexnet.AlexNetConfig(model_file)
+        if model_name.split('/')[1] == 'vgg16':
+            config = vgg16.vggConfig(model_file)
     else:
         config = AutoConfig.from_pretrained(model_name)
         # Sonfig overrides
