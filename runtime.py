@@ -378,7 +378,7 @@ def load_dataset(dataset_cfg: dict, model_name: str, batch_size: int, ubatch_siz
                           'facebook/deit-tiny-distilled-patch16-224']:
             feature_extractor = DeiTFeatureExtractor.from_pretrained(model_name)
 
-        elif model_name in ['torchvision/resnet18', 'torchvision/alexnet']:
+        elif model_name in ['torchvision/resnet18', 'torchvision/alexnet', 'torchvision/vgg16']:
             feature_extractor = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
