@@ -222,7 +222,8 @@ class ResNetLayerShard_Bottleneck(ModuleShard):
 layershard_type = {
     18: ResNetLayerShard_BasicBlock,
     34: ResNetLayerShard_BasicBlock,
-    50: ResNetLayerShard_Bottleneck
+    50: ResNetLayerShard_Bottleneck,
+    101: ResNetLayerShard_Bottleneck
 }
 
 class ResNetModelShard(ModuleShard):
@@ -427,5 +428,27 @@ class ResNet50ModelShard(ResNetModelShard):
             1: [4,3,3],
             2: [4,3,3,3],
             3: [4,3,3,3,3,3],
+            4: [4,3,3]
+        }
+
+class ResNet101ModelShard(ResNetModelShard):
+    def __init__(self, config, shard_config: ModuleShardConfig,
+                 model_weights):
+        super().__init__(config, shard_config, model_weights)
+
+    def init_version_and_map(self):
+        self.version = 101
+        self.bu_num = 105
+        self.layer_map = {
+            1: (2,11),
+            2: (12,24),
+            3: (25,94),
+            4: (95,104)
+        }
+
+        self.block_map = {
+            1: [4,3,3],
+            2: [4,3,3,3],
+            3: [4]+[3]*22,
             4: [4,3,3]
         }

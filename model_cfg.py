@@ -51,6 +51,8 @@ _model_cfg_add('torchvision/resnet34', 37, 'resnet34.pt',
                resnet.ResNet34ModelShard)
 _model_cfg_add('torchvision/resnet50', 54, 'resnet50.pt',
                resnet.ResNet50ModelShard)
+_model_cfg_add('torchvision/resnet101', 105, 'resnet50.pt',
+               resnet.ResNet50ModelShard)
 _model_cfg_add('torchvision/alexnet', 5, 'alexnet.pt',
                alexnet.AlexNetModelShard)
 
