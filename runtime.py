@@ -378,7 +378,7 @@ def load_dataset(dataset_cfg: dict, model_name: str, batch_size: int, ubatch_siz
                           'facebook/deit-tiny-distilled-patch16-224']:
             feature_extractor = DeiTFeatureExtractor.from_pretrained(model_name)
 
-        elif model_name in ['torchvision/resnet18', 'torchvision/alexnet']:
+        elif model_name.startswith('torchvision'):
             feature_extractor = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
@@ -420,7 +420,7 @@ def load_dataset(dataset_cfg: dict, model_name: str, batch_size: int, ubatch_siz
         ## random data
         # image = torch.randn(3, 384, 384)
         image = Image.open(requests.get(IMG_URL, stream=True, timeout=60).raw)
-        if model_name in ['torchvision/resnet18', 'torchvision/alexnet']:
+        if model_name.startswith('torchvision'):
             inputs = feature_extractor(image)
         else:
             inputs = feature_extractor(images=[image], return_tensors="pt")['pixel_values']

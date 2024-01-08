@@ -46,7 +46,11 @@ _model_cfg_add('facebook/deit-small-distilled-patch16-224', 48, 'DeiT_S_distille
 _model_cfg_add('facebook/deit-tiny-distilled-patch16-224', 48, 'DeiT_T_distilled.npz',
                deit.DeiTShardForImageClassification)
 _model_cfg_add('torchvision/resnet18', 21, 'resnet18.pt',
-               resnet.ResNetModelShard)
+               resnet.ResNet18ModelShard)
+_model_cfg_add('torchvision/resnet34', 37, 'resnet34.pt',
+               resnet.ResNet34ModelShard)
+_model_cfg_add('torchvision/resnet50', 54, 'resnet50.pt',
+               resnet.ResNet50ModelShard)
 _model_cfg_add('torchvision/alexnet', 5, 'alexnet.pt',
                alexnet.AlexNetModelShard)
 
@@ -66,7 +70,7 @@ def get_model_config(model_name: str, model_file) -> Any:
     """Get a model's config."""
     # We'll need more complexity if/when we add support for models not from `transformers`
     if model_name.split('/')[0] == 'torchvision':
-        if model_name.split('/')[1] == 'resnet18':
+        if model_name.split('/')[1].startswith('resnet'):
             config = resnet.ResnetConfig(model_file)
         if model_name.split('/')[1] == 'alexnet':
             config = alexnet.AlexNetConfig(model_file)
