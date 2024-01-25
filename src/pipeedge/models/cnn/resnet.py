@@ -4,10 +4,9 @@ from torch import nn
 from torch.nn import Conv2d, BatchNorm2d, ReLU, MaxPool2d
 import numpy as np
 from torchvision import models
+from torchvision.models.resnet import ResNet
 from .. import ModuleShard, ModuleShardConfig
-
-import pdb
-
+from . import CNNShardData
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,6 @@ class ResnetConfig:
 
     def get_layer_info(self, layer):
         info = {}
-        
         if isinstance(layer, models.resnet.BasicBlock) or isinstance(layer, models.resnet.Bottleneck):
             for sub_name, sub_child in layer.named_children():
                 if sub_name == "downsample":
@@ -79,7 +77,7 @@ class ResnetConfig:
 
 
 class ResNetLayerShard_BasicBlock(ModuleShard):
-    def __init__(self, config, shard_config: ModuleShardConfig):
+    def __init__(self, config: ResnetConfig, shard_config: ModuleShardConfig):
         super().__init__(config, shard_config)
         self.conv1 = None
         self.bn1 = None
@@ -106,9 +104,8 @@ class ResNetLayerShard_BasicBlock(ModuleShard):
             self.relu = ReLU(inplace=True)
 
     @torch.no_grad()
-    def forward(self, data_pack):
+    def forward(self, data_pack: CNNShardData):
         """Compute layer shard."""
-        # pdb.set_trace()
         data = data_pack[0]
         identity = data_pack[1]
         if self.has_layer(0):
@@ -141,7 +138,7 @@ class ResNetLayerShard_BasicBlock(ModuleShard):
             self.downsample_bn.load_state_dict(weight.downsample[1].state_dict())
 
 class ResNetLayerShard_Bottleneck(ModuleShard):
-    def __init__(self, config, shard_config: ModuleShardConfig):
+    def __init__(self, config: ResnetConfig, shard_config: ModuleShardConfig):
         super().__init__(config, shard_config)
         self.conv1 = None
         self.bn1 = None
@@ -174,9 +171,8 @@ class ResNetLayerShard_Bottleneck(ModuleShard):
             self.relu = ReLU(inplace=True)
 
     @torch.no_grad()
-    def forward(self, data_pack):
+    def forward(self, data_pack: CNNShardData):
         """Compute layer shard."""
-        # pdb.set_trace()
         data = data_pack[0]
         identity = data_pack[1]
         if self.has_layer(0):
@@ -227,8 +223,8 @@ layershard_type = {
 }
 
 class ResNetModelShard(ModuleShard):
-    def __init__(self, config, shard_config: ModuleShardConfig,
-                 model_weights):
+    def __init__(self, config: ResnetConfig, shard_config: ModuleShardConfig,
+                 model_weights: ResNet):
         super().__init__(config, shard_config)
         self.conv1 = None
         self.bn1 = None
@@ -270,7 +266,6 @@ class ResNetModelShard(ModuleShard):
 
     def _build_shard(self, weights):
         if self.shard_config.is_first:
-            logger.debug(">>>> Load embeddings layer for the first shard")
             self.conv1 = Conv2d(**self.config['conv1'])
             self.bn1 = BatchNorm2d(**self.config['bn1'])
             self.relu = ReLU(**self.config['relu'])
@@ -280,15 +275,12 @@ class ResNetModelShard(ModuleShard):
             layer_curr = 2 if self.shard_config.layer_start == 1 else self.shard_config.layer_start
             layer_end = self.shard_config.layer_end
             stop_flag = False
-            # print(layer_curr, layer_end)
             for layer_id in self.layer_map:
                 ori_layer_start = self.layer_map[layer_id][0]
                 ori_layer_end = self.layer_map[layer_id][1]
-                # print(layer_id)
                 if  ori_layer_start <= layer_curr <= ori_layer_end:
                     offset =  0
                     bb_map = self.block_map[layer_id]
-                    # print(bb_map)
                     for layer_sub_id in range(len(bb_map)):
                         basic_block_range = bb_map[layer_sub_id]
                         if ori_layer_start + offset <= layer_curr < ori_layer_start + offset + basic_block_range:
@@ -345,9 +337,8 @@ class ResNetModelShard(ModuleShard):
         layer.load_weight(weights)
 
     @torch.no_grad()
-    def forward(self, data):
+    def forward(self, data: CNNShardData):
         """Compute shard layers."""
-        # pdb.set_trace()
         if self.shard_config.is_first:
             data = self.conv1(data)
             data = self.bn1(data)
@@ -365,8 +356,8 @@ class ResNetModelShard(ModuleShard):
 
 
 class ResNet18ModelShard(ResNetModelShard):
-    def __init__(self, config, shard_config: ModuleShardConfig,
-                 model_weights):
+    def __init__(self, config: ResnetConfig, shard_config: ModuleShardConfig,
+                 model_weights: ResNet):
         super().__init__(config, shard_config, model_weights)
 
     def init_version_and_map(self):
@@ -388,8 +379,8 @@ class ResNet18ModelShard(ResNetModelShard):
         }
 
 class ResNet34ModelShard(ResNetModelShard):
-    def __init__(self, config, shard_config: ModuleShardConfig,
-                 model_weights):
+    def __init__(self, config: ResnetConfig, shard_config: ModuleShardConfig,
+                 model_weights: ResNet):
         super().__init__(config, shard_config, model_weights)
 
     def init_version_and_map(self):
@@ -410,8 +401,8 @@ class ResNet34ModelShard(ResNetModelShard):
         }
 
 class ResNet50ModelShard(ResNetModelShard):
-    def __init__(self, config, shard_config: ModuleShardConfig,
-                 model_weights):
+    def __init__(self, config: ResnetConfig, shard_config: ModuleShardConfig,
+                 model_weights: ResNet):
         super().__init__(config, shard_config, model_weights)
 
     def init_version_and_map(self):
@@ -432,8 +423,8 @@ class ResNet50ModelShard(ResNetModelShard):
         }
 
 class ResNet101ModelShard(ResNetModelShard):
-    def __init__(self, config, shard_config: ModuleShardConfig,
-                 model_weights):
+    def __init__(self, config: ResnetConfig, shard_config: ModuleShardConfig,
+                 model_weights: ResNet):
         super().__init__(config, shard_config, model_weights)
 
     def init_version_and_map(self):

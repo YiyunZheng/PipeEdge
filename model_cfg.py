@@ -10,8 +10,6 @@ from pipeedge.models.cnn import alexnet, resnet
 from pipeedge.models.transformers import bert, deit, vit
 import devices
 
-import pdb
-
 _logger = logging.getLogger(__name__)
 
 _MODEL_CONFIGS = {}
@@ -105,10 +103,8 @@ def module_shard_factory(model_name: str, model_file: Optional[str], layer_start
                          layer_end: int, stage: int) -> ModuleShard:
     """Get a shard instance on the globally-configured `devices.DEVICE`."""
     # This works b/c all shard implementations have the same constructor interface
-    # pdb.set_trace()
     if model_file is None:
         model_file = get_model_default_weights_file(model_name)
-    # pdb.set_trace()
     config = get_model_config(model_name, model_file)
     is_first = layer_start == 1
     is_last = layer_end == get_model_layers(model_name)

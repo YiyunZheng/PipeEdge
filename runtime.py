@@ -29,7 +29,6 @@ from utils import quant as quantutil
 
 from torchvision import transforms
 
-import pdb
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +261,6 @@ def handle_results(tensors: torch.Tensor) -> None:
         acc = torch.nn.functional.softmax(tensors, dim=-1).max(dim=-1)[0].sum().item()
     else:
         # Measure accuracy based on label (microbatch ordering must be enforced for correctness).
-        # pdb.set_trace()
         ubatch_labels = label_queue.get()
         assert len(tensors) == len(ubatch_labels)
         pred = tensors.argmax(dim=1)
@@ -486,7 +484,6 @@ def run_pipeline_p2p(world_size: int, rank: int, model_name: str, model_file: Op
         if stage is None:
             model = None
         else:
-            # pdb.set_trace()
             model = model_cfg.module_shard_factory(model_name, model_file, stage_layers[stage][0],
                                                    stage_layers[stage][1], stage)
             model.register_buffer('quant_bit', torch.tensor(stage_quant[stage]), persistent=False)
@@ -524,7 +521,6 @@ def run_pipeline_p2p(world_size: int, rank: int, model_name: str, model_file: Op
                 # this call is asynchronous - wait for results to get end-to-end timings
                 start_count = results_counter.value
                 for ubatch, ubatch_labels in data_loader:
-                    # pdb.set_trace()
                     label_queue.put(ubatch_labels)
                     stage_ctx.enqueue_tensor(ubatch)
                 results_counter.wait_gte(start_count + len(dataset))
@@ -745,8 +741,6 @@ def main() -> None:
     logger.info("Device: %s", devices.DEVICE)
     logger.debug("# parallel intra nodes threads: %d", torch.get_num_threads())
     logger.debug("# parallel inter nodes threads: %d", torch.get_num_interop_threads())
-    
-    # pdb.set_trace()
     
     if args.comm == 'p2p':
         run_pipeline_p2p(args.worldsize, args.rank, args.model_name, args.model_file,
